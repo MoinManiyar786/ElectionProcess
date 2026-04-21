@@ -1,0 +1,68 @@
+import express from "express";
+import compression from "compression";
+import path from "path";
+import {
+  createHelmetMiddleware,
+  createCorsMiddleware,
+  createRateLimiter,
+  requestLogger,
+  errorHandler,
+  notFoundHandler,
+} from "./middleware/security";
+import electionRoutes from "./routes/electionRoutes";
+import chatRoutes from "./routes/chatRoutes";
+import quizRoutes from "./routes/quizRoutes";
+
+export function createApp(): express.Application {
+  const app = express();
+
+  const windowMs = Number(process.env["RATE_LIMIT_WINDOW_MS"]) || 900_000;
+  const maxRequests = Number(process.env["RATE_LIMIT_MAX_REQUESTS"]) || 100;
+
+  app.use(createHelmetMiddleware());
+  app.use(createCorsMiddleware());
+  app.use(compression());
+  app.use(express.json({ limit: "10kb" }));
+  app.use(express.urlencoded({ extended: false, limit: "10kb" }));
+  app.use(createRateLimiter(windowMs, maxRequests));
+
+  if (process.env["NODE_ENV"] !== "test") {
+    app.use(requestLogger);
+  }
+
+  app.use(express.static(path.join(__dirname, "..", "public"), {
+    maxAge: "1d",
+    etag: true,
+    lastModified: true,
+  }));
+
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      success: true,
+      data: {
+        status: "healthy",
+        uptime: process.uptime(),
+        timestamp: Date.now(),
+        version: "1.0.0",
+      },
+      timestamp: Date.now(),
+    });
+  });
+
+  app.use("/api/election", electionRoutes);
+  app.use("/api/chat", chatRoutes);
+  app.use("/api/quiz", quizRoutes);
+
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api/")) {
+      next();
+      return;
+    }
+    res.sendFile(path.join(__dirname, "..", "public", "index.html"));
+  });
+
+  app.use("/api/*", notFoundHandler);
+  app.use(errorHandler);
+
+  return app;
+}

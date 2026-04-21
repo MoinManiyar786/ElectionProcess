@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive AI-powered assistant to help you understand election processes, timelines, and steps.">
+  <meta name="theme-color" content="#1a365d">
+  <meta name="robots" content="index, follow">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Election Process Education Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div aria-live="polite" aria-atomic="true" class="live-region" id="announcements"></div>
+
+  <header class="header" role="banner">
+    <div class="header__inner">
+      <div>
+        <h1 class="header__title">
+          <span class="header__title-icon" aria-hidden="true">Election</span>
+          Election Education Assistant
+        </h1>
+        <p class="header__subtitle">Your interactive guide to election processes</p>
+      </div>
+      <nav class="nav" role="navigation" aria-label="Main navigation">
+        <button class="nav__btn nav__btn--active" data-section="timeline" aria-pressed="true" aria-label="View election timeline">
+          Timeline
+        </button>
+        <button class="nav__btn" data-section="chat" aria-pressed="false" aria-label="Ask the AI assistant">
+          AI Assistant
+        </button>
+        <button class="nav__btn" data-section="quiz" aria-pressed="false" aria-label="Take a quiz">
+          Quiz
+        </button>
+        <button class="nav__btn" data-section="faq" aria-pressed="false" aria-label="Frequently asked questions">
+          FAQ
+        </button>
+        <button class="nav__btn" data-section="glossary" aria-pressed="false" aria-label="Election glossary">
+          Glossary
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main" id="main-content" role="main">
+
+    <!-- Timeline Section -->
+    <section class="section section--active" id="section-timeline" aria-labelledby="timeline-heading">
+      <div class="section__header">
+        <h2 class="section__title" id="timeline-heading">Election Process Timeline</h2>
+        <p class="section__description">Follow the complete journey of an election process, from registration and campaigning to certification and transition.</p>
+      </div>
+      <div class="timeline" role="list" aria-label="Election process steps" id="timeline-container">
+        <div class="loading" id="timeline-loading" role="status">
+          <div class="loading__spinner" aria-hidden="true"></div>
+          <span>Loading election timeline...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chat Section -->
+    <section class="section" id="section-chat" aria-labelledby="chat-heading">
+      <div class="section__header">
+        <h2 class="section__title" id="chat-heading">AI Election Assistant</h2>
+        <p class="section__description">Ask any question about election processes. Powered by Google Gemini AI.</p>
+      </div>
+      <div class="chat" role="region" aria-label="Chat with AI election assistant">
+        <div class="chat__header">
+          <div class="chat__header-dot" aria-hidden="true"></div>
+          <span class="chat__header-title">Election Assistant</span>
+          <span class="chat__header-status" id="chat-status">Online</span>
+        </div>
+        <div class="chat__messages" id="chat-messages" role="log" aria-label="Chat messages" aria-live="polite">
+          <div class="chat__message chat__message--assistant">
+            Welcome! I'm your AI election education assistant. Ask me anything about election processes, from registration and voting to certification and transition. What would you like to learn about?
+          </div>
+        </div>
+        <div class="chat__typing" id="chat-typing" aria-label="Assistant is typing" role="status">
+          <div class="chat__typing-dot" aria-hidden="true"></div>
+          <div class="chat__typing-dot" aria-hidden="true"></div>
+          <div class="chat__typing-dot" aria-hidden="true"></div>
+        </div>
+        <div class="chat__suggestions" role="group" aria-label="Suggested questions">
+          <button class="chat__suggestion" data-message="How does the Electoral College work?">Electoral College</button>
+          <button class="chat__suggestion" data-message="How do I register to vote?">Voter Registration</button>
+          <button class="chat__suggestion" data-message="What happens on Election Day?">Election Day</button>
+          <button class="chat__suggestion" data-message="What is a primary election?">Primaries</button>
+          <button class="chat__suggestion" data-message="Explain the inauguration process">Inauguration</button>
+        </div>
+        <form class="chat__input-area" id="chat-form" aria-label="Send a message">
+          <label for="chat-input" class="sr-only">Type your question about the election process</label>
+          <input
+            type="text"
+            class="chat__input"
+            id="chat-input"
+            placeholder="Ask about the election process..."
+            autocomplete="off"
+            maxlength="1000"
+            aria-describedby="chat-input-hint"
+          >
+          <span id="chat-input-hint" class="sr-only">Press Enter or click Send to submit your question</span>
+          <button type="submit" class="chat__send" id="chat-send" aria-label="Send message">
+            <span aria-hidden="true">Send</span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Quiz Section -->
+    <section class="section" id="section-quiz" aria-labelledby="quiz-heading">
+      <div class="section__header">
+        <h2 class="section__title" id="quiz-heading">Test Your Knowledge</h2>
+        <p class="section__description">Challenge yourself with questions about election processes and voting systems.</p>
+      </div>
+
+      <div class="quiz__start" id="quiz-start">
+        <h3>Choose Your Difficulty</h3>
+        <div class="quiz__start-options" role="radiogroup" aria-label="Select quiz difficulty">
+          <button class="quiz__difficulty-btn" data-difficulty="beginner" role="radio" aria-checked="false">
+            Beginner
+          </button>
+          <button class="quiz__difficulty-btn" data-difficulty="intermediate" role="radio" aria-checked="false">
+            Intermediate
+          </button>
+          <button class="quiz__difficulty-btn" data-difficulty="advanced" role="radio" aria-checked="false">
+            Advanced
+          </button>
+          <button class="quiz__difficulty-btn quiz__difficulty-btn--selected" data-difficulty="all" role="radio" aria-checked="true">
+            All Levels
+          </button>
+        </div>
+        <button class="quiz__start-btn" id="quiz-start-btn" aria-label="Start the quiz">
+          Start Quiz
+        </button>
+      </div>
+
+      <div class="quiz__container" id="quiz-container">
+        <div class="quiz__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Quiz progress">
+          <div class="quiz__progress-bar">
+            <div class="quiz__progress-fill" id="quiz-progress-fill"></div>
+          </div>
+          <span class="quiz__progress-text" id="quiz-progress-text">0 / 0</span>
+        </div>
+
+        <div class="quiz__question-card" id="quiz-question-card">
+          <div class="quiz__question-badge" id="quiz-difficulty-badge"></div>
+          <p class="quiz__question-text" id="quiz-question-text"></p>
+          <div class="quiz__options" id="quiz-options" role="group" aria-label="Answer options"></div>
+          <div class="quiz__explanation" id="quiz-explanation">
+            <p class="quiz__explanation-title" id="quiz-explanation-title"></p>
+            <p class="quiz__explanation-text" id="quiz-explanation-text"></p>
+          </div>
+          <button class="quiz__next-btn" id="quiz-next-btn" aria-label="Next question">
+            Next Question
+          </button>
+        </div>
+      </div>
+
+      <div class="quiz__results" id="quiz-results" aria-live="polite">
+        <div class="quiz__results-score" id="quiz-results-score"></div>
+        <div class="quiz__results-grade" id="quiz-results-grade"></div>
+        <p class="quiz__results-feedback" id="quiz-results-feedback"></p>
+        <button class="quiz__results-retry" id="quiz-retry-btn" aria-label="Try the quiz again">
+          Try Again
+        </button>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="section" id="section-faq" aria-labelledby="faq-heading">
+      <div class="section__header">
+        <h2 class="section__title" id="faq-heading">Frequently Asked Questions</h2>
+        <p class="section__description">Quick answers to common questions about the election process.</p>
+      </div>
+      <div class="faq__list" id="faq-list" role="list" aria-label="Frequently asked questions">
+        <div class="loading" id="faq-loading" role="status">
+          <div class="loading__spinner" aria-hidden="true"></div>
+          <span>Loading FAQs...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Glossary Section -->
+    <section class="section" id="section-glossary" aria-labelledby="glossary-heading">
+      <div class="section__header">
+        <h2 class="section__title" id="glossary-heading">Election Glossary</h2>
+        <p class="section__description">Key terms and definitions to help you navigate the election process.</p>
+      </div>
+      <div class="glossary__search">
+        <label for="glossary-search" class="sr-only">Search glossary terms</label>
+        <input
+          type="search"
+          class="glossary__search-input"
+          id="glossary-search"
+          placeholder="Search terms..."
+          autocomplete="off"
+          aria-describedby="glossary-search-hint"
+        >
+        <span id="glossary-search-hint" class="sr-only">Type to filter glossary terms</span>
+      </div>
+      <div class="glossary__grid" id="glossary-grid" role="list" aria-label="Glossary terms">
+        <div class="loading" id="glossary-loading" role="status">
+          <div class="loading__spinner" aria-hidden="true"></div>
+          <span>Loading glossary...</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <p>Election Process Education Assistant - Helping citizens understand democracy.</p>
+    <p>Powered by <a href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer">Google Gemini AI</a>. Built for civic education.</p>
+    <p>This tool provides educational information only. For official election information, visit <a href="https://vote.gov" target="_blank" rel="noopener noreferrer">vote.gov</a>.</p>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
