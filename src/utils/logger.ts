@@ -3,6 +3,12 @@ import winston from "winston";
 const LOG_LEVEL = process.env["LOG_LEVEL"] ?? "info";
 const NODE_ENV = process.env["NODE_ENV"] ?? "development";
 
+/**
+ * Structured logger using Winston.
+ * - Development: Colorized console output
+ * - Production: JSON format with file transport (error.log + combined.log)
+ * - Test: Silent mode
+ */
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
   winston.format.errors({ stack: true }),

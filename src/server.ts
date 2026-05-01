@@ -4,6 +4,10 @@ import { getConfig } from "./config";
 import { logger } from "./utils/logger";
 import { cleanupExpiredSessions } from "./services/aiService";
 
+/**
+ * Initialize and start the Express server with graceful shutdown support.
+ * Loads configuration, creates the app, and registers process signal handlers.
+ */
 function startServer(): void {
   try {
     const config = getConfig();

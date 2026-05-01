@@ -4,6 +4,10 @@ import { v4 as uuidv4 } from "uuid";
 
 const quizSessions = new Map<string, QuizSession>();
 
+/**
+ * Create a new quiz session with randomly selected questions.
+ * Supports filtering by difficulty and category.
+ */
 export function createQuizSession(options?: {
   difficulty?: QuizQuestion["difficulty"];
   category?: string;
@@ -32,10 +36,17 @@ export function createQuizSession(options?: {
   return session;
 }
 
+/**
+ * Retrieve an existing quiz session by ID.
+ */
 export function getQuizSession(sessionId: string): QuizSession | undefined {
   return quizSessions.get(sessionId);
 }
 
+/**
+ * Submit an answer for a question in an active quiz session.
+ * Returns whether the answer was correct along with the explanation.
+ */
 export function submitAnswer(
   sessionId: string,
   questionId: string,
@@ -88,6 +99,10 @@ export function submitAnswer(
   };
 }
 
+/**
+ * Get the final results for a completed or in-progress quiz session.
+ * Returns percentage score, letter grade, and feedback message.
+ */
 export function getQuizResults(sessionId: string): {
   session: QuizSession;
   percentage: number;
@@ -127,10 +142,16 @@ export function getQuizResults(sessionId: string): {
   return { session, percentage, grade, feedback };
 }
 
+/**
+ * Get all unique quiz question categories.
+ */
 export function getAvailableCategories(): string[] {
   return [...new Set(quizQuestions.map((q) => q.category))];
 }
 
+/**
+ * Get all available difficulty levels.
+ */
 export function getAvailableDifficulties(): QuizQuestion["difficulty"][] {
   return [...new Set(quizQuestions.map((q) => q.difficulty))];
 }

@@ -1,6 +1,7 @@
 import express from "express";
 import compression from "compression";
 import path from "path";
+import { v4 as uuidv4 } from "uuid";
 import {
   createHelmetMiddleware,
   createCorsMiddleware,
@@ -14,11 +15,22 @@ import chatRoutes from "./routes/chatRoutes";
 import quizRoutes from "./routes/quizRoutes";
 import googleCloudRoutes from "./routes/googleCloudRoutes";
 
+/**
+ * Create and configure the Express application with all middleware and routes.
+ * Separated from server.ts to allow testing without starting a listener.
+ */
 export function createApp(): express.Application {
   const app = express();
 
+  app.disable("x-powered-by");
+
   const windowMs = Number(process.env["RATE_LIMIT_WINDOW_MS"]) || 900_000;
   const maxRequests = Number(process.env["RATE_LIMIT_MAX_REQUESTS"]) || 100;
+
+  app.use((_req, res, next) => {
+    res.setHeader("X-Request-Id", uuidv4());
+    next();
+  });
 
   app.use(createHelmetMiddleware());
   app.use(createCorsMiddleware());

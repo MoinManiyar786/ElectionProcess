@@ -4,6 +4,9 @@ import rateLimit from "express-rate-limit";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../utils/logger";
 
+/**
+ * Configure Helmet for secure HTTP headers including a strict CSP.
+ */
 export function createHelmetMiddleware(): ReturnType<typeof helmet> {
   return helmet({
     contentSecurityPolicy: {
@@ -34,6 +37,9 @@ export function createHelmetMiddleware(): ReturnType<typeof helmet> {
   });
 }
 
+/**
+ * Configure CORS: open in development, restricted in production.
+ */
 export function createCorsMiddleware(): ReturnType<typeof cors> {
   return cors({
     origin: process.env["NODE_ENV"] === "production" ? false : true,
@@ -44,6 +50,9 @@ export function createCorsMiddleware(): ReturnType<typeof cors> {
   });
 }
 
+/**
+ * Create a global rate limiter to prevent abuse.
+ */
 export function createRateLimiter(windowMs: number, max: number): ReturnType<typeof rateLimit> {
   return rateLimit({
     windowMs,
@@ -66,6 +75,9 @@ export function createRateLimiter(windowMs: number, max: number): ReturnType<typ
   });
 }
 
+/**
+ * Create a stricter rate limiter specifically for AI chat endpoints.
+ */
 export function createApiRateLimiter(): ReturnType<typeof rateLimit> {
   return rateLimit({
     windowMs: 60_000,
@@ -80,14 +92,17 @@ export function createApiRateLimiter(): ReturnType<typeof rateLimit> {
   });
 }
 
-export function requestLogger(req: Request, _res: Response, next: NextFunction): void {
+/**
+ * Log incoming requests with method, URL, status, and duration.
+ */
+export function requestLogger(req: Request, res: Response, next: NextFunction): void {
   const start = Date.now();
-  _res.on("finish", () => {
+  res.on("finish", () => {
     const duration = Date.now() - start;
     logger.info("request", {
       method: req.method,
       url: req.originalUrl,
-      status: _res.statusCode,
+      status: res.statusCode,
       duration: `${duration}ms`,
       userAgent: req.get("user-agent"),
     });
@@ -95,6 +110,9 @@ export function requestLogger(req: Request, _res: Response, next: NextFunction):
   next();
 }
 
+/**
+ * Global error handler — hides stack traces in production.
+ */
 export function errorHandler(
   err: Error,
   _req: Request,
@@ -111,6 +129,9 @@ export function errorHandler(
   });
 }
 
+/**
+ * Handle 404 for unmatched API routes.
+ */
 export function notFoundHandler(_req: Request, res: Response): void {
   res.status(404).json({
     success: false,

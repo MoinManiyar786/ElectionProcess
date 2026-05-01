@@ -7,6 +7,7 @@ let app: express.Application;
 beforeAll(() => {
   process.env["NODE_ENV"] = "test";
   process.env["GOOGLE_AI_API_KEY"] = "test-api-key-for-testing";
+  process.env["GOOGLE_CLOUD_API_KEY"] = "test-cloud-key-for-testing";
   app = createApp();
 });
 
@@ -267,6 +268,33 @@ describe("API Integration Tests", () => {
     it("should include HSTS header", async () => {
       const res = await request(app).get("/api/health");
       expect(res.headers["strict-transport-security"]).toBeTruthy();
+    });
+
+    it("should include X-Request-Id header", async () => {
+      const res = await request(app).get("/api/health");
+      expect(res.headers["x-request-id"]).toBeTruthy();
+      expect(res.headers["x-request-id"]).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+      );
+    });
+
+    it("should not expose X-Powered-By header", async () => {
+      const res = await request(app).get("/api/health");
+      expect(res.headers["x-powered-by"]).toBeUndefined();
+    });
+
+    it("should include referrer-policy header", async () => {
+      const res = await request(app).get("/api/health");
+      expect(res.headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+    });
+
+    it("should reject oversized request bodies", async () => {
+      const largeBody = { message: "x".repeat(50000) };
+      const res = await request(app)
+        .post("/api/chat/message")
+        .send(largeBody);
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.body.success).toBe(false);
     });
   });
 

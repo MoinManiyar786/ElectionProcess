@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+/**
+ * Environment variable schema with validation and defaults.
+ * All required variables will throw a descriptive error at startup if missing.
+ */
 const envSchema = z.object({
   GOOGLE_AI_API_KEY: z.string().min(1, "Google AI API key is required"),
   GOOGLE_CLOUD_API_KEY: z.string().min(1, "Google Cloud API key is required"),
@@ -12,6 +16,10 @@ const envSchema = z.object({
 
 export type AppConfig = z.infer<typeof envSchema>;
 
+/**
+ * Parse and validate environment variables against the schema.
+ * Throws a formatted error listing all invalid/missing variables.
+ */
 function loadConfig(): AppConfig {
   const result = envSchema.safeParse(process.env);
 
@@ -33,6 +41,9 @@ function loadConfig(): AppConfig {
 
 let cachedConfig: AppConfig | null = null;
 
+/**
+ * Get the validated application configuration. Caches after first load.
+ */
 export function getConfig(): AppConfig {
   if (!cachedConfig) {
     cachedConfig = loadConfig();
@@ -40,10 +51,16 @@ export function getConfig(): AppConfig {
   return cachedConfig;
 }
 
+/**
+ * Reset the cached config (primarily for testing).
+ */
 export function resetConfigCache(): void {
   cachedConfig = null;
 }
 
+/**
+ * Application-wide constants that don't depend on environment.
+ */
 export const APP_CONSTANTS = {
   MAX_CHAT_MESSAGE_LENGTH: 1000,
   MAX_CHAT_HISTORY: 50,
