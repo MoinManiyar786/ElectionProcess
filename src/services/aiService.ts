@@ -7,6 +7,7 @@ import { logger } from "../utils/logger";
 import { electionFAQs, searchFAQs } from "../data/faqs";
 import { getPhaseById, getPhasesByOrder } from "../data/electionPhases";
 import { getGlossaryTerm, searchGlossary } from "../data/glossary";
+import { analyzeSentiment } from "./googleCloudService";
 import { v4 as uuidv4 } from "uuid";
 
 const SYSTEM_PROMPT = `You are an expert, non-partisan election education assistant. Your role is to help users understand the U.S. election process, timelines, and procedures in a clear, accurate, and engaging way.
@@ -179,6 +180,18 @@ export async function sendMessage(
     return { response: localFallback, sessionId: session.id };
   }
 
+  let sentimentContext = "";
+  try {
+    const sentiment = await analyzeSentiment(sanitized);
+    if (sentiment.score < -0.3) {
+      sentimentContext = " The user seems frustrated or confused — respond with extra patience and clarity.";
+    } else if (sentiment.score > 0.5) {
+      sentimentContext = " The user seems enthusiastic — match their energy while staying informative.";
+    }
+  } catch {
+    // Sentiment analysis is optional — continue without it
+  }
+
   try {
     const genAI = getAIClient();
     const model = genAI.getGenerativeModel({
@@ -201,7 +214,7 @@ export async function sendMessage(
         { role: "model", parts: [{ text: "I understand. I'm ready to help users learn about the election process. I'll provide factual, non-partisan information about elections." }] },
         ...buildChatHistory(session.messages),
       ],
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction: SYSTEM_PROMPT + sentimentContext,
     });
 
     const result = await chat.sendMessage(sanitized);

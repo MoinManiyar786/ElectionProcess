@@ -1,8 +1,8 @@
 import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
 
-const window = new JSDOM("").window;
-const purify = DOMPurify(window as unknown as any);
+const { window } = new JSDOM("");
+const purify = DOMPurify(window);
 
 export function sanitizeInput(input: string): string {
   const trimmed = input.trim();

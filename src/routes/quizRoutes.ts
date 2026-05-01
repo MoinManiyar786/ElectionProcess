@@ -15,7 +15,9 @@ const router = Router();
 router.post("/start", (req: Request, res: Response) => {
   try {
     const parsed = quizFilterSchema.safeParse(req.body);
-    const filters: any = parsed.success ? parsed.data : {};
+    const filters = parsed.success
+      ? parsed.data
+      : { difficulty: undefined, category: undefined, count: 10 };
 
     const session = createQuizSession({
       difficulty: filters.difficulty,

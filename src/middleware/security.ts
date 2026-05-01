@@ -14,6 +14,7 @@ export function createHelmetMiddleware(): ReturnType<typeof helmet> {
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'"],
+        mediaSrc: ["'self'", "data:", "blob:"],
         frameSrc: ["'none'"],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],

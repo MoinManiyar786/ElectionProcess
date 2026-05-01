@@ -2,7 +2,7 @@
 
 /**
  * Election Education Assistant — Frontend Application
- * Accessible, performant single-page application
+ * Accessible, performant SPA with Google Cloud integrations
  */
 (function () {
   /* ========== State ========== */
@@ -15,9 +15,12 @@
     quizCurrentIndex: 0,
     quizAnswered: false,
     selectedDifficulty: "all",
+    selectedLanguage: "en",
     phases: [],
     faqs: [],
     glossary: [],
+    ttsPlaying: false,
+    currentAudio: null,
   };
 
   /* ========== DOM References ========== */
@@ -88,6 +91,87 @@
     const target = $(`#section-${sectionId}`);
     if (target) {
       target.focus({ preventScroll: true });
+    }
+  }
+
+  /* ========== Language / Translation ========== */
+  function initLanguageSelector() {
+    const select = $("#language-select");
+    if (!select) return;
+
+    select.addEventListener("change", (e) => {
+      state.selectedLanguage = e.target.value;
+      announce(`Language changed to ${e.target.options[e.target.selectedIndex].text}`);
+    });
+  }
+
+  async function translateMessage(text, targetLang) {
+    if (!targetLang || targetLang === "en") return text;
+
+    try {
+      const result = await api("/google/translate", {
+        method: "POST",
+        body: JSON.stringify({ text, targetLanguage: targetLang }),
+      });
+
+      if (result.success && result.data) {
+        return result.data.translatedText;
+      }
+      return text;
+    } catch (error) {
+      console.warn("Translation failed:", error.message);
+      return text;
+    }
+  }
+
+  /* ========== Text-to-Speech ========== */
+  async function speakText(text, button) {
+    if (state.ttsPlaying && state.currentAudio) {
+      state.currentAudio.pause();
+      state.currentAudio = null;
+      state.ttsPlaying = false;
+      if (button) button.classList.remove("chat__action-btn--active");
+      return;
+    }
+
+    try {
+      if (button) button.classList.add("chat__action-btn--active");
+      state.ttsPlaying = true;
+
+      const result = await api("/google/tts", {
+        method: "POST",
+        body: JSON.stringify({
+          text: text.slice(0, 2000),
+          languageCode: state.selectedLanguage === "en" ? "en-US" : state.selectedLanguage,
+          ssmlGender: "FEMALE",
+        }),
+      });
+
+      if (result.success && result.data) {
+        const audio = new Audio(`data:audio/mpeg;base64,${result.data.audioContent}`);
+        state.currentAudio = audio;
+
+        audio.addEventListener("ended", () => {
+          state.ttsPlaying = false;
+          state.currentAudio = null;
+          if (button) button.classList.remove("chat__action-btn--active");
+        });
+
+        audio.addEventListener("error", () => {
+          state.ttsPlaying = false;
+          state.currentAudio = null;
+          if (button) button.classList.remove("chat__action-btn--active");
+        });
+
+        await audio.play();
+        announce("Playing audio");
+      }
+    } catch (error) {
+      state.ttsPlaying = false;
+      state.currentAudio = null;
+      if (button) button.classList.remove("chat__action-btn--active");
+      console.warn("TTS failed:", error.message);
+      announce("Text-to-speech is unavailable");
     }
   }
 
@@ -206,6 +290,53 @@
         form.dispatchEvent(new Event("submit"));
       }
     });
+
+    initChatActions();
+  }
+
+  function initChatActions() {
+    const container = $("#chat-messages");
+    container.addEventListener("click", (e) => {
+      const btn = e.target.closest(".chat__action-btn");
+      if (!btn) return;
+
+      const message = btn.closest(".chat__message");
+      const contentEl = message.querySelector(".chat__message-content");
+      const text = contentEl ? contentEl.textContent : message.textContent;
+      const action = btn.dataset.action;
+
+      if (action === "tts") {
+        speakText(text, btn);
+      } else if (action === "translate") {
+        handleTranslateAction(text, contentEl, btn);
+      }
+    });
+  }
+
+  async function handleTranslateAction(text, contentEl, btn) {
+    if (state.selectedLanguage === "en") {
+      announce("Select a language from the dropdown to translate");
+      return;
+    }
+
+    btn.classList.add("chat__action-btn--active");
+
+    try {
+      const translated = await translateMessage(text, state.selectedLanguage);
+      if (contentEl && translated !== text) {
+        const original = contentEl.innerHTML;
+        contentEl.innerHTML = `<div class="translated-text">${escapeHtml(translated)}</div><div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:4px;">Translated from English</div>`;
+
+        setTimeout(() => {
+          contentEl.innerHTML = original;
+          btn.classList.remove("chat__action-btn--active");
+        }, 10000);
+      }
+    } catch (error) {
+      announce("Translation failed");
+    } finally {
+      btn.classList.remove("chat__action-btn--active");
+    }
   }
 
   function addChatMessage(content, role) {
@@ -214,9 +345,21 @@
     msg.className = `chat__message chat__message--${role}`;
 
     if (role === "assistant") {
-      msg.innerHTML = formatMarkdown(content);
+      msg.innerHTML = `
+        <div class="chat__message-content">${formatMarkdown(content)}</div>
+        <div class="chat__message-actions">
+          <button class="chat__action-btn" data-action="tts" aria-label="Listen to this message" title="Listen">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 5h2l4-3v12l-4-3H3a1 1 0 01-1-1V6a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5"/><path d="M11 5s1.5 1 1.5 3-1.5 3-1.5 3M13 3s2.5 2 2.5 5-2.5 5-2.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+          <button class="chat__action-btn" data-action="translate" aria-label="Translate this message" title="Translate">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 3h7M5.5 1v2M3.5 3s.5 3 3.5 5M7.5 3s-.5 3-3.5 5M8 14l3-7 3 7M9 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      `;
+    } else if (role === "user") {
+      msg.innerHTML = `<div class="chat__message-content">${escapeHtml(content)}</div>`;
     } else {
-      msg.textContent = content;
+      msg.innerHTML = `<div class="chat__message-content">${escapeHtml(content)}</div>`;
     }
 
     container.appendChild(msg);
@@ -483,6 +626,7 @@
     const loading = $("#faq-loading");
     if (loading) loading.remove();
 
+    container.innerHTML = "";
     const fragment = document.createDocumentFragment();
 
     faqs.forEach((faq, index) => {
@@ -514,6 +658,36 @@
     });
 
     container.appendChild(fragment);
+  }
+
+  function initFAQSearch() {
+    const input = $("#faq-search");
+    if (!input) return;
+
+    let debounceTimer = null;
+
+    input.addEventListener("input", () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const query = input.value.trim().toLowerCase();
+        const container = $("#faq-list");
+
+        if (!query) {
+          renderFAQs(container, state.faqs);
+          announce(`Showing all ${state.faqs.length} FAQs`);
+          return;
+        }
+
+        const filtered = state.faqs.filter(
+          (f) =>
+            f.question.toLowerCase().includes(query) ||
+            f.answer.toLowerCase().includes(query)
+        );
+
+        renderFAQs(container, filtered);
+        announce(`${filtered.length} FAQs match "${query}"`);
+      }, 300);
+    });
   }
 
   /* ========== Glossary ========== */
@@ -620,6 +794,11 @@
         if (active && active.closest(".chat")) {
           $("#chat-input").blur();
         }
+        if (state.ttsPlaying && state.currentAudio) {
+          state.currentAudio.pause();
+          state.currentAudio = null;
+          state.ttsPlaying = false;
+        }
       }
 
       if ((e.ctrlKey || e.metaKey) && e.key >= "1" && e.key <= "5") {
@@ -636,8 +815,10 @@
   /* ========== Initialize ========== */
   function init() {
     initNavigation();
+    initLanguageSelector();
     initChat();
     initQuiz();
+    initFAQSearch();
     initGlossarySearch();
     initKeyboardNav();
 

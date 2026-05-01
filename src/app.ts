@@ -12,6 +12,7 @@ import {
 import electionRoutes from "./routes/electionRoutes";
 import chatRoutes from "./routes/chatRoutes";
 import quizRoutes from "./routes/quizRoutes";
+import googleCloudRoutes from "./routes/googleCloudRoutes";
 
 export function createApp(): express.Application {
   const app = express();
@@ -52,6 +53,7 @@ export function createApp(): express.Application {
   app.use("/api/election", electionRoutes);
   app.use("/api/chat", chatRoutes);
   app.use("/api/quiz", quizRoutes);
+  app.use("/api/google", googleCloudRoutes);
 
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api/")) {
