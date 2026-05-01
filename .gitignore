@@ -3,5 +3,6 @@ dist/
 coverage/
 .env
 .gcloud/
+cloudrun.env.yaml
 *.log
 .DS_Store
